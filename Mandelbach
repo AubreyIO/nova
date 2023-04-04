@@ -1,0 +1,67 @@
+import time
+import board
+import neopixel
+import math
+
+# Define the number of LEDs and create a neopixel object
+NUM_LEDS = 10
+pixels = neopixel.NeoPixel(board.NEOPIXEL, NUM_LEDS, brightness=0.2)
+
+# Define the bounds and resolution of the fractal
+MIN_X = -2
+MAX_X = 1
+MIN_Y = -1
+MAX_Y = 1
+RESOLUTION = 100
+
+# Define a function to map a pixel's position to a point in the fractal
+def pixel_to_point(x, y):
+    point_x = MIN_X + (MAX_X - MIN_X) * x / NUM_LEDS
+    point_y = MIN_Y + (MAX_Y - MIN_Y) * y / RESOLUTION
+    return (point_x, point_y)
+
+# Define a function to calculate the color of a pixel based on its position
+def get_color(x, y):
+    point = pixel_to_point(x, y)
+    z = complex(0, 0)
+    c = complex(point[0], point[1])
+    for i in range(50):
+        z = z*z + c
+        if abs(z) > 2:
+            break
+    hue = i / 50.0
+    saturation = 1.0
+    value = math.exp(-i / 50.0)
+    rgb = hsv_to_rgb(hue, saturation, value)
+    return (int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
+
+# Define a function to convert a color from HSV to RGB
+def hsv_to_rgb(h, s, v):
+    if s == 0.0:
+        return (v, v, v)
+    i = int(h * 6.0)
+    f = (h * 6.0) - i
+    p = v * (1.0 - s)
+    q = v * (1.0 - s * f)
+    t = v * (1.0 - s * (1.0 - f))
+    if i % 6 == 0:
+        return (v, t, p)
+    if i % 6 == 1:
+        return (q, v, p)
+    if i % 6 == 2:
+        return (p, v, t)
+    if i % 6 == 3:
+        return (p, q, v)
+    if i % 6 == 4:
+        return (t, p, v)
+    if i % 6 == 5:
+        return (v, p, q)
+
+# Loop through each pixel and set its color based on its position
+while True:
+    for i in range(NUM_LEDS):
+        for j in range(RESOLUTION):
+            color = get_color(i, j)
+            pixels[i] = color
+            time.sleep(0.001)
+    pixels.show()

@@ -1,0 +1,24 @@
+import time
+import board
+import pulseio
+
+# Set up the PWM output for the haptic driver
+haptic_driver = pulseio.PWMOut(board.GP2, duty_cycle=0, frequency=1000)
+
+# Define the various haptic patterns
+patterns = [
+    [100, 0.1],   # Pattern 1: 100% duty cycle for 0.1 seconds
+    [50, 0.2, 50, 0.2],   # Pattern 2: 50% duty cycle for 0.2 seconds, then off for 0.2 seconds, repeated twice
+    [25, 0.1, 50, 0.1, 75, 0.1]   # Pattern 3: 25% duty cycle for 0.1 seconds, then 50% duty cycle for 0.1 seconds, then 75% duty cycle for 0.1 seconds
+]
+
+# Loop through the patterns and play them on the haptic motor
+while True:
+    for pattern in patterns:
+        for i in range(0, len(pattern), 2):
+            duty_cycle = int((pattern[i] / 100) * 65535)
+            duration = pattern[i+1]
+            haptic_driver.duty_cycle = duty_cycle
+            time.sleep(duration)
+        haptic_driver.duty_cycle = 0
+        time.sleep(0.5)
